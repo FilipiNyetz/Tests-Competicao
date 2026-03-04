@@ -14,10 +14,18 @@
 
 import Foundation
 
+// MARK: - DateProviding
+// Protocolo que abstrai a fonte de data do sistema.
+// Ao invés de chamar Date() diretamente no ViewModel, delegamos
+// essa responsabilidade para quem implementar esse protocolo.
+// Isso permite que nos testes passemos uma data fixa (MockDateProvider)
+// e em produção usemos a data real (RealDateProvider).
 protocol DateProviding {
     var hoje: Date { get }
 }
 
+// Implementação real usada em produção.
+// Retorna sempre a data e hora atual do dispositivo.
 class RealDateProvider: DateProviding {
     var hoje: Date { Date() }
 }
@@ -25,6 +33,17 @@ class RealDateProvider: DateProviding {
 class BancoViewModel {
     
     private(set) var conta: Conta
+    // dateProvider é injetado no init — padrão chamado "Injeção de Dependência".
+      // Isso significa que o ViewModel não decide qual data usar,
+      // quem cria o ViewModel é que decide.
+      //
+      // Exemplo em produção:
+      //   BancoViewModel(conta: conta)
+      //   → usa RealDateProvider por padrão → Date() real
+      //
+      // Exemplo nos testes:
+      //   BancoViewModel(conta: conta, dateProvider: MockDateProvider(data: dataFixa))
+      //   → usa data congelada → testes sempre produzem o mesmo resultado
     private let dateProvider: DateProviding
     
     init(conta: Conta, dateProvider: DateProviding = RealDateProvider()) {
